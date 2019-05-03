@@ -18,24 +18,28 @@ int toInt(char str[]){
 	return value;
 }
 
-int checkForCommand(char str[]){
+void checkForCommand(char str[]){
 	int index = toInt(str);
+	cout << index << endl;
 	switch(index){
 		case save:
-			cout << "Called SAVE" << endl;
-			return 0;
+			cout << "Called SAVE\n" << endl;
 			break;
+//			return 0;
 		
 		case load:
-			cout << "Called LOAD" << endl;
-			return 1;
+			cout << "Called LOAD\n" << endl;
+			break;
+//			return 1;
 			
 		case download:
-			cout << "Called DOWNLOAD" << endl;
-			return 2;
+			cout << "Called DOWNLOAD\n" << endl;
+			break;
+//			return 2;
 			
 		default:
-			cout << "command not found" << endl;
-			return -1;
+			cout << "Command not found\n" << endl;
+			break;
+//			return -1;
 	}
 }

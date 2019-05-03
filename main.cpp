@@ -15,8 +15,8 @@ int main()
 	while (true)
 	{
 		cout << "$$ > :";
-		cin >> command;
-		
+		getline(cin, command);
+
 		char tmp[command.size() + 1];
 		strcpy(tmp, command.c_str());
 		
@@ -24,7 +24,7 @@ int main()
 		pch = strtok(tmp, " ");
 		
 		int temp = checkForCommand(pch);
-		
+
 //		while (pch != NULL)
 //		{
 //			cout << pch << endl;
