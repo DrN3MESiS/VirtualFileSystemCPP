@@ -1,1 +1,10 @@
-int checkForCommand(char str[]);
+signed int cmdCheck(char str[]);
+void saveFunction();
+void loadFunction();
+void downloadFunction();
+void createFunction();
+void rmFunction();
+void detailsFunction();
+void openFunction();
+void lsFunction();
+void infoFunction();
