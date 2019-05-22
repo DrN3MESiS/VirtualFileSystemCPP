@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <vector>
+#include <fstream>
+#include <cstdlib>
 #include "functions.h"
 #define version "\nVirtual File System [Version 0.1b]\nCreated by AEMN & GGM\n"
 #define vol_max_size 1073741824

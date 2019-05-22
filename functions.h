@@ -1,5 +1,7 @@
 #include <vector>
 #include <cstring>
+#include <fstream>
+#include <cstdlib>
 
 using namespace std;
 

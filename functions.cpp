@@ -1,6 +1,9 @@
 #include "functions.h"
 #include <vector>
 #include <iostream>
+#include <fstream>
+#include <cstdlib>
+
 #define save 431
 #define load 416
 #define download 856
@@ -14,7 +17,18 @@
 #define exit 442
 
 #define MAX_BLOCKSIZE 1024
+#define MAX_SIZE 1073741824
 using namespace std;
+
+struct FS{
+		long long int size;
+		vector<string> file_list;
+		int *ptr;
+		int n_files = 0;
+	};
+	
+bool FS_OPEN = false;	
+FS curFS;
 
 int toInt(char str[]){
 	int value = 0;
@@ -103,13 +117,20 @@ void loadFunction(vector<string> param){
 		cout << " > [ERROR] Not enough arguments in function LOAD... Usage: load <original_file.ext> <copy_file.ext> \n" << endl;
 		return;
 	}
+	
+	string original_filename = param[1];
+	string copy_filename = param[2];
 }
 
 void downloadFunction(vector<string> param){
-	if(param.size() < 3){
+	if(param.size() < 4){
 		cout << " > [ERROR] Not enough arguments in function DOWNLOAD... Usage: download <name> <copy_file.ext> <new_copy_file.ext>\n" << endl;
 		return;
 	}
+	
+	string name = param[1];
+	string copy_file = param[2];
+	string new_copy_file = param[3];
 }
 
 void createFunction(vector<string> param){
@@ -119,7 +140,30 @@ void createFunction(vector<string> param){
 	}
 	
 	string name = param[1];
-	int b_size = stoi(param[2]);
+	long long int b_size = stoi(param[2]);
+	long long int nOfBlocks = stoi(param[3]);
+	
+	if(b_size > MAX_BLOCKSIZE){
+		cout << " > [ERROR] Block size can't be over 1024! Default block sizes: 1024 512 256 128\n" << endl;
+		return;
+	}
+	
+	if( (b_size * nOfBlocks) > MAX_SIZE ){
+		cout << " > [ERROR] Your current [ block size * number of blocks ] surpasses 1073741824 bytes or 1GB of memory.\n" << endl;
+		return;
+	}
+	
+	int *addr = (int*) malloc((b_size * nOfBlocks));
+	if(addr == NULL){
+		cout << " > [EXEC_ERROR] The file system couldn't be created. -> Memory ERR: Code (124)" << endl;
+		return;
+	}
+	
+	FS_OPEN = true;
+	FS newFS;
+	newFS.size = (b_size * nOfBlocks);
+	newFS.ptr = addr;
+	curFS = newFS;
 				
 }
 
@@ -128,6 +172,8 @@ void rmFunction(vector<string> param){
 		cout << " > [ERROR] Not enough arguments in function OPEN... Usage: rm <filename.ext>\n" << endl;
 		return;
 	}
+	
+	string filename = param[1];
 }
 
 void detailsFunction(vector<string> param){
@@ -135,6 +181,8 @@ void detailsFunction(vector<string> param){
 		cout << " > [ERROR] Not enough arguments in function OPEN... Usage: details <filename.ext>\n" << endl;
 		return;
 	}
+	
+	string filename = param[1];
 }
 
 void openFunction(vector<string> param){
@@ -142,6 +190,8 @@ void openFunction(vector<string> param){
 		cout << " > [ERROR] Not enough arguments in function OPEN... Usage: open <name>\n" << endl;
 		return;
 	}
+	
+	string name = param[1];
 }
 
 void lsFunction(){
