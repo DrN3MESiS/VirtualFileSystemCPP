@@ -1,4 +1,5 @@
 #include "functions.h"
+#include <vector>
 #include <iostream>
 #define save 431
 #define load 416
@@ -6,11 +7,13 @@
 #define create 628
 #define rm 648
 #define details 742
-#define open 657
-#define ls 556
-#define info 651
+#define open 434
+#define ls 223
+#define info 428
 #define clear 519
 #define exit 442
+
+#define MAX_BLOCKSIZE 1024
 using namespace std;
 
 int toInt(char str[]){
@@ -23,10 +26,7 @@ int toInt(char str[]){
 }
 
 signed int cmdCheck(char str[]){
-	cout << "\nReceived STR: " << str << endl;
 	int index = toInt(str);
-	cout << "STR Number: " << index << endl;
-	cout << endl;
 	switch(index){
 		case save:
 			cout << "Called SAVE\n" << endl;
@@ -34,32 +34,32 @@ signed int cmdCheck(char str[]){
 			break;
 		
 		case load:
-			cout << "Called LOAD\n" << endl;
+//			cout << "Called LOAD\n" << endl;
 			index = 1;
 			break;
 			
 		case download:
-			cout << "Called DOWNLOAD\n" << endl;
+//			cout << "Called DOWNLOAD\n" << endl;
 			index  = 2;
 			break;
 
 		case create:
-			cout << "Called CREATE\n" << endl;
+//			cout << "Called CREATE\n" << endl;
 			index = 3;
 			break;
 			
 		case rm:
-			cout << "Called RM\n" << endl;
+//			cout << "Called RM\n" << endl;
 			index = 4;
 			break;
 			
 		case details:
-			cout << "Called DETAILS\n" << endl;
+//			cout << "Called DETAILS\n" << endl;
 			index = 5;
 			break;
 			
 		case open:
-			cout << "Called OPEN\n" << endl;
+//			cout << "Called OPEN\n" << endl;
 			index = 6;
 			break;
 			
@@ -98,28 +98,50 @@ void saveFunction(){
 	
 }
 
-void loadFunction(){
-	
+void loadFunction(vector<string> param){
+	if(param.size() < 3){
+		cout << " > [ERROR] Not enough arguments in function LOAD... Usage: load <original_file.ext> <copy_file.ext> \n" << endl;
+		return;
+	}
 }
 
-void downloadFunction(){
-	
+void downloadFunction(vector<string> param){
+	if(param.size() < 3){
+		cout << " > [ERROR] Not enough arguments in function DOWNLOAD... Usage: download <name> <copy_file.ext> <new_copy_file.ext>\n" << endl;
+		return;
+	}
 }
 
-void createFunction(){
+void createFunction(vector<string> param){
+	if(param.size() < 4){
+		cout << " > [ERROR] Not enough arguments in function CREATE... Usage: create <name> <blocksize> <nOfBlocks>\n" << endl;
+		return;
+	}
 	
+	string name = param[1];
+	int b_size = stoi(param[2]);
+				
 }
 
-void rmFunction(){
-	
+void rmFunction(vector<string> param){
+	if(param.size() < 2){
+		cout << " > [ERROR] Not enough arguments in function OPEN... Usage: rm <filename.ext>\n" << endl;
+		return;
+	}
 }
 
-void detailsFunction(){
-	
+void detailsFunction(vector<string> param){
+	if(param.size() < 2){
+		cout << " > [ERROR] Not enough arguments in function OPEN... Usage: details <filename.ext>\n" << endl;
+		return;
+	}
 }
 
-void openFunction(){
-	
+void openFunction(vector<string> param){
+	if(param.size() < 2){
+		cout << " > [ERROR] Not enough arguments in function OPEN... Usage: open <name>\n" << endl;
+		return;
+	}
 }
 
 void lsFunction(){
