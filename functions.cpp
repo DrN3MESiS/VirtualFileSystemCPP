@@ -36,6 +36,12 @@ struct FS_File{
 	vector<string> listOfBlocks;
 };
 
+struct FS_Block{
+	int bid;
+	long long int size;
+	
+};
+
 
 bool FS_OPEN = false;	
 FS curFS;
