@@ -160,9 +160,8 @@ void downloadFunction(vector<string> param){
 		return;
 	}
 	
-	string name = param[1];
-	string copy_file = param[2];
-	string new_copy_file = param[3];
+	string copy_file = param[1];
+	string new_copy_file = param[2];
 }
 
 void createFunction(vector<string> param){
