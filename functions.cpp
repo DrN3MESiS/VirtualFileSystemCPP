@@ -78,7 +78,7 @@ signed int cmdCheck(char str[]){
 			break;
 			
 		case details:
-//			cout << "Called DETAILS\n" << endl;
+			cout << "Called DETAILS\n" << endl;
 			index = 5;
 			break;
 			
