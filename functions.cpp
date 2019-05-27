@@ -140,14 +140,23 @@ void loadFunction(vector<string> param){
 		cout << " > [ERROR] Not enough arguments in function LOAD... Usage: load <original_file.ext> <copy_file.ext> \n" << endl;
 		return;
 	}
+	if(!FS_OPEN){
+		cout << " > [ERROR] There's no active file system... \n" << endl;
+		return;
+	}
 	
 	string original_filename = param[1];
 	string copy_filename = param[2];
 }
 
 void downloadFunction(vector<string> param){
-	if(param.size() < 4){
-		cout << " > [ERROR] Not enough arguments in function DOWNLOAD... Usage: download <name> <copy_file.ext> <new_copy_file.ext>\n" << endl;
+	if(param.size() < 3){
+		cout << " > [ERROR] Not enough arguments in function DOWNLOAD... Usage: download <copy_file.ext> <new_copy_file.ext>\n" << endl;
+		return;
+	}
+	
+	if(!FS_OPEN){
+		cout << " > [ERROR] There's no active file system... \n" << endl;
 		return;
 	}
 	
@@ -197,12 +206,22 @@ void rmFunction(vector<string> param){
 		return;
 	}
 	
+	if(!FS_OPEN){
+		cout << " > [ERROR] There's no active file system... \n" << endl;
+		return;
+	}
+	
 	string filename = param[1];
 }
 
 void detailsFunction(vector<string> param){
 	if(param.size() < 2){
-		cout << " > [ERROR] Not enough arguments in function OPEN... Usage: details <filename.ext>\n" << endl;
+		cout << " > [ERROR] Not enough arguments in function DETAILS... Usage: details <filename.ext>\n" << endl;
+		return;
+	}
+	
+	if(!FS_OPEN){
+		cout << " > [ERROR] There's no active file system... \n" << endl;
 		return;
 	}
 	
@@ -218,6 +237,7 @@ void openFunction(vector<string> param){
 	string name = param[1];
 	
 	if(FS_OPEN){
+		
 		return;
 	} else {
 		ifstream input_file(name + ".dat", ios::binary);
@@ -228,7 +248,10 @@ void openFunction(vector<string> param){
 }
 
 void lsFunction(){
-	
+	if(!FS_OPEN){
+		cout << " > [ERROR] There's no active file system... \n" << endl;
+		return;
+	}
 }
 
 void infoFunction(){
