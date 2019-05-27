@@ -20,22 +20,27 @@
 #define MAX_SIZE 1073741824
 using namespace std;
 
+struct FS_Block{
+	int bid;
+};
+
+struct FS_File{
+	string filename;
+	vector<FS_Block> blocks_used;
+	vector<FS_Block> listOfBlocks;
+};
+
 struct FS{
 		string name;
 		long long int size;
+		long long int freeBlocks;
+		long long int usedBlocks = 0;
 		int blocksize = 128;
-		vector<string> file_list;
-		int *ptr;
+		vector<FS_File> file_list;
+		char * ptr;
 		int n_files = 0;
-		long long int used = 0;
 	};
 	
-struct FS_File{
-	string filename;
-	int blocks_used = 0;
-	vector<string> listOfBlocks;
-};
-
 bool FS_OPEN = false;	
 FS curFS;
 
@@ -119,8 +124,7 @@ signed int cmdCheck(char str[]){
 
 void saveFunction(){
 	if(FS_OPEN){
-		
-		 ofstream output_file(curFS.name + ".dat", ios::binary);
+		ofstream output_file(curFS.name + ".dat", ios::binary);
 	    output_file.write((char*)&curFS, sizeof(curFS));
 	    output_file.close();
 	} else {
@@ -177,7 +181,7 @@ void createFunction(vector<string> param){
 		return;
 	}
 	
-	int *addr = (int*) malloc((b_size * nOfBlocks));
+	char *addr = (char*) malloc((b_size * nOfBlocks));
 	if(addr == NULL){
 		cout << " > [EXEC_ERROR] The file system couldn't be created. -> Memory ERR: Code (124)" << endl;
 		return;
@@ -188,8 +192,11 @@ void createFunction(vector<string> param){
 	newFS.blocksize = b_size;
 	newFS.name = name;
 	newFS.size = (b_size * nOfBlocks);
+	newFS.freeBlocks = nOfBlocks;
 	newFS.ptr = addr;
 	curFS = newFS;
+	
+	cout << " > [SUCCESS] A new file system was created -> " << curFS.name << endl;
 }
 
 void rmFunction(vector<string> param){
@@ -252,8 +259,8 @@ void infoFunction(){
 		cout << "\tFile System Name: " << curFS.name << endl;
 		cout << "\tFile System Size (bytes): " << curFS.size << endl;
 		cout << "\tFile System Block Size: " << curFS.blocksize << endl;
-		cout << "\tSpace Used (bytes): " << curFS.used << endl;
-		cout << "\tFree Space (bytes): " << (curFS.size - curFS.used) << endl;
+		cout << "\tSpace Used (bytes): " << curFS.usedBlocks * curFS.blocksize << endl;
+		cout << "\tFree Space (bytes): " << (curFS.freeBlocks * curFS.blocksize) << endl;
 	} else {
 		cout << " > [WARNING] There isn't a file system opened. Please load on create a file system in order to display it's information.\n" << endl;
 	}
