@@ -234,15 +234,11 @@ void openFunction(vector<string> param){
 	
 	string name = param[1];
 	
-	if(FS_OPEN){
-		
-		return;
-	} else {
 		ifstream input_file(name + ".dat", ios::binary);
     	FS master;
     	input_file.read((char*)&master, sizeof(master));
     	curFS = master;
-	}
+	
 }
 
 void lsFunction(){
