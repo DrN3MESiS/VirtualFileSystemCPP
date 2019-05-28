@@ -26,7 +26,6 @@ struct FS_Block{
 
 struct FS_File{
 	string filename;
-	vector<FS_Block> blocks_used;
 	vector<FS_Block> listOfBlocks;
 };
 
