@@ -14,7 +14,7 @@ using namespace std;
 
 int main()
 {
-	system("mode 1000");
+	//system("mode 1000");
 	cout << version << endl;
 	while (true)
 	{
