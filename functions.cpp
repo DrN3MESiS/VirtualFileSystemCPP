@@ -20,23 +20,26 @@
 #define MAX_SIZE 1073741824
 using namespace std;
 
+struct FS_Block{
+	int bid;
+};
+
+struct FS_File{
+	string filename;
+	vector<FS_Block> listOfBlocks;
+};
+
 struct FS{
 		string name;
 		long long int size;
+		long long int freeBlocks;
+		long long int usedBlocks = 0;
 		int blocksize = 128;
-		vector<string> file_list;
-		int *ptr;
+		vector<FS_File> file_list;
+		char * ptr;
 		int n_files = 0;
-		long long int used = 0;
 	};
 	
-struct FS_File{
-	string filename;
-	int blocks_used = 0;
-	vector<string> listOfBlocks;
-};
-
-
 bool FS_OPEN = false;	
 FS curFS;
 
@@ -120,8 +123,7 @@ signed int cmdCheck(char str[]){
 
 void saveFunction(){
 	if(FS_OPEN){
-		
-		 ofstream output_file(curFS.name + ".dat", ios::binary);
+		ofstream output_file(curFS.name + ".dat", ios::binary);
 	    output_file.write((char*)&curFS, sizeof(curFS));
 	    output_file.close();
 	} else {
@@ -134,20 +136,28 @@ void loadFunction(vector<string> param){
 		cout << " > [ERROR] Not enough arguments in function LOAD... Usage: load <original_file.ext> <copy_file.ext> \n" << endl;
 		return;
 	}
+	if(!FS_OPEN){
+		cout << " > [ERROR] There's no active file system... \n" << endl;
+		return;
+	}
 	
 	string original_filename = param[1];
 	string copy_filename = param[2];
 }
 
 void downloadFunction(vector<string> param){
-	if(param.size() < 4){
-		cout << " > [ERROR] Not enough arguments in function DOWNLOAD... Usage: download <name> <copy_file.ext> <new_copy_file.ext>\n" << endl;
+	if(param.size() < 3){
+		cout << " > [ERROR] Not enough arguments in function DOWNLOAD... Usage: download <copy_file.ext> <new_copy_file.ext>\n" << endl;
 		return;
 	}
 	
-	string name = param[1];
-	string copy_file = param[2];
-	string new_copy_file = param[3];
+	if(!FS_OPEN){
+		cout << " > [ERROR] There's no active file system... \n" << endl;
+		return;
+	}
+	
+	string copy_file = param[1];
+	string new_copy_file = param[2];
 }
 
 void createFunction(vector<string> param){
@@ -170,7 +180,7 @@ void createFunction(vector<string> param){
 		return;
 	}
 	
-	int *addr = (int*) malloc((b_size * nOfBlocks));
+	char *addr = (char*) malloc((b_size * nOfBlocks));
 	if(addr == NULL){
 		cout << " > [EXEC_ERROR] The file system couldn't be created. -> Memory ERR: Code (124)" << endl;
 		return;
@@ -181,8 +191,11 @@ void createFunction(vector<string> param){
 	newFS.blocksize = b_size;
 	newFS.name = name;
 	newFS.size = (b_size * nOfBlocks);
+	newFS.freeBlocks = nOfBlocks;
 	newFS.ptr = addr;
 	curFS = newFS;
+	
+	cout << " > [SUCCESS] A new file system was created -> " << curFS.name << endl;
 }
 
 void rmFunction(vector<string> param){
@@ -191,12 +204,22 @@ void rmFunction(vector<string> param){
 		return;
 	}
 	
+	if(!FS_OPEN){
+		cout << " > [ERROR] There's no active file system... \n" << endl;
+		return;
+	}
+	
 	string filename = param[1];
 }
 
 void detailsFunction(vector<string> param){
 	if(param.size() < 2){
-		cout << " > [ERROR] Not enough arguments in function OPEN... Usage: details <filename.ext>\n" << endl;
+		cout << " > [ERROR] Not enough arguments in function DETAILS... Usage: details <filename.ext>\n" << endl;
+		return;
+	}
+	
+	if(!FS_OPEN){
+		cout << " > [ERROR] There's no active file system... \n" << endl;
 		return;
 	}
 	
@@ -212,6 +235,7 @@ void openFunction(vector<string> param){
 	string name = param[1];
 	
 	if(FS_OPEN){
+		
 		return;
 	} else {
 		ifstream input_file(name + ".dat", ios::binary);
@@ -222,7 +246,10 @@ void openFunction(vector<string> param){
 }
 
 void lsFunction(){
-	
+	if(!FS_OPEN){
+		cout << " > [ERROR] There's no active file system... \n" << endl;
+		return;
+	}
 }
 
 void infoFunction(){
@@ -231,8 +258,8 @@ void infoFunction(){
 		cout << "\tFile System Name: " << curFS.name << endl;
 		cout << "\tFile System Size (bytes): " << curFS.size << endl;
 		cout << "\tFile System Block Size: " << curFS.blocksize << endl;
-		cout << "\tSpace Used (bytes): " << curFS.used << endl;
-		cout << "\tFree Space (bytes): " << (curFS.size - curFS.used) << endl;
+		cout << "\tSpace Used (bytes): " << curFS.usedBlocks * curFS.blocksize << endl;
+		cout << "\tFree Space (bytes): " << (curFS.freeBlocks * curFS.blocksize) << endl;
 	} else {
 		cout << " > [WARNING] There isn't a file system opened. Please load on create a file system in order to display it's information.\n" << endl;
 	}
