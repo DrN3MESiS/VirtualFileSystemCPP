@@ -183,19 +183,23 @@ void createFunction(vector<string> param){
 		return;
 	}
 	
-	char *addr = (char*) malloc((b_size * nOfBlocks));
-	if(addr == NULL){
-		cout << " > [EXEC_ERROR] The file system couldn't be created. -> Memory ERR: Code (124)" << endl;
-		return;
-	}
-	
 	FS_OPEN = true;
 	FS newFS;
 	newFS.blocksize = b_size;
 	newFS.name = name;
 	newFS.size = (b_size * nOfBlocks);
 	newFS.freeBlocks = nOfBlocks;
-	newFS.ptr = addr;
+	newFS.ptr = (char*) malloc((b_size * nOfBlocks));
+	
+	if(newFS.ptr == NULL){
+		cout << " > [EXEC_ERROR] The file system couldn't be created. -> Memory ERR: Code (124)" << endl;
+		return;
+	}
+	
+	for(int i = 0; i < newFS.size; i++){
+		newFS.ptr[i] = '0';
+	}
+	
 	curFS = newFS;
 	
 	cout << " > [SUCCESS] A new file system was created -> " << curFS.name << endl;
