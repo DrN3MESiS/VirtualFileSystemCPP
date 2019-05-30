@@ -22,6 +22,8 @@ using namespace std;
 
 struct FS_Block{
 	int bid;
+	bool isFree = true;
+	string data;
 };
 
 struct FS_File{
