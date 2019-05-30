@@ -1,10 +1,12 @@
-#include "functions.h"
-#include <vector>
 #include <iostream>
+#include <cstring>
+#include <cmath>
+#include <stdio.h>
+#include <string.h>
+#include <vector>
 #include <fstream>
 #include <cstdlib>
-#include <cstring>
-
+#include <map>
 #define save 431
 #define load 416
 #define download 856
@@ -16,10 +18,23 @@
 #define info 428
 #define clear 519
 #define exit 442
-
 #define MAX_BLOCKSIZE 1024
 #define MAX_SIZE 1073741824
+#define version "\nVirtual File System [Version 0.1b]\nCreated by AEMN & GGM\n"
+#define vol_max_size 1073741824
+
 using namespace std;
+
+signed int cmdCheck(char str[]);
+void saveFunction();
+void loadFunction(vector<string> param);
+void downloadFunction(vector<string> param);
+void createFunction(vector<string> param);
+void rmFunction(vector<string> param);
+void detailsFunction(vector<string> param);
+void openFunction(vector<string> param);
+void lsFunction();
+void infoFunction();
 
 class FS_Block{
 	public:
@@ -30,7 +45,8 @@ class FS_Block{
 class FS_File{
 	public:
 		string filename;
-		vector<FS_Block> listOfBlocks;
+		int blocks_used = 0;
+		vector<int> listOfBlocks;
 };
 
 class FS{
@@ -40,7 +56,7 @@ class FS{
 		long long int freeBlocks;
 		long long int usedBlocks = 0;
 		int blocksize = 128;
-		vector<FS_File> file_list;
+		map<string,FS_File> file_list;
 		char * ptr;
 		void saveTo(const string& filename); 
     	void openFrom(const string& filename); 
@@ -48,6 +64,79 @@ class FS{
 	
 bool FS_OPEN = false;	
 FS curFS;
+
+int main(){
+	cout << version << endl;
+	while (true)
+	{
+		vector<string> param;
+		string command;
+		cout << "$$ > :";
+		getline(cin, command);
+		
+		if(command.empty()){
+			continue;
+		}
+
+		char tmp[command.size() + 1];
+		strcpy(tmp, command.c_str());
+		
+		char *pch;
+		pch = strtok(tmp, " ");
+		while (pch != NULL)
+		{
+			param.push_back(pch);
+			pch = strtok(NULL, " ");
+		}
+		
+		char main[param[0].size() + 1];
+		strcpy(main, param[0].c_str());
+
+		int funcID = cmdCheck(main);
+		switch(funcID){
+			case 0: //SAVE
+				saveFunction();
+				break;
+			case 1: //LOAD
+				loadFunction(param);
+				break;
+			case 2: //DOWNLOAD
+				downloadFunction(param);
+				break;
+			case 3: //CREATE
+				createFunction(param);
+				break;
+			case 4: //RM
+				rmFunction(param);
+				break;
+			case 5: //DETAILS
+				detailsFunction(param);
+				break;
+			case 6: //OPEN
+				openFunction(param);
+				break;
+			case 7: //LS
+				lsFunction();
+				break;
+			case 8: //INFO
+				infoFunction(); 
+				break;
+			case -1:
+				// NOT FOUND
+				break;
+			case -2: //EXIT
+				return 0;
+			case -3: //CLEAR
+				break;
+			default:
+				cout << "\nAlan o Guille, something happened, this is an error in the Console \n" << endl;
+				break;
+		}
+
+		
+	}
+	return 0;
+}
 
 int toInt(char str[]){
 	int value = 0;
@@ -165,7 +254,7 @@ void FS::openFrom(const string& filename){
     inf.read(reinterpret_cast<char*>(&blocksize), sizeof(blocksize));
 
     inf.read(reinterpret_cast<char*>(&value), sizeof(value));
-    file_list.resize(value);
+    value = filename.size();
     for (size_t i = 0; i < value; ++i) {
         // read file_list[i] from stream as needed...
     }
@@ -199,6 +288,45 @@ void loadFunction(vector<string> param){
 	
 	string original_filename = param[1];
 	string copy_filename = param[2];
+	
+	ifstream input_file(original_filename, ios::binary);
+	input_file.seekg(0, input_file.end);
+	size_t length = input_file.tellg();
+	input_file.seekg(0, input_file.beg);
+	char buffer[length];
+	
+	FS_File f;
+	f.filename = copy_filename;
+	f.blocks_used = ceil(length / curFS.blocksize);
+	
+	// don't overflow the buffer!
+	if (length > (curFS.size - curFS.usedBlocks))
+	{
+	    cout << " > [ERROR] Not enough memory space for the file... Required a minimum memory of " << length << "\n" << endl;
+		return;
+	}
+	
+	input_file.read(buffer,sizeof(buffer));
+	input_file.close();
+	
+	char block[curFS.blocksize];
+	int j = 0;
+	
+	for(int i=1; i<length+1; i++){
+		block[(i-1) - (j*curFS.blocksize)] = buffer[i-1];
+		if(i % curFS.blocksize == 0){
+			f.listOfBlocks.insert(f.listOfBlocks.end(),j);
+			for(int index; index < sizeof(block); index++){
+				curFS.ptr[j*curFS.blocksize + index] = block[index];
+			}
+			j++;
+		}
+	}
+	curFS.file_list.insert(pair<string,FS_File>(f.filename,f));
+	curFS.usedBlocks = length;
+
+	cout << " > [SUCCESSFUL] The file has been loaded with success.'\n" << endl;
+
 }
 
 void downloadFunction(vector<string> param){
@@ -214,6 +342,24 @@ void downloadFunction(vector<string> param){
 	
 	string copy_file = param[1];
 	string new_copy_file = param[2];
+	
+	FS_File f = curFS.file_list[copy_file];
+	
+	char buffer[curFS.blocksize * f.blocks_used];
+	
+	for (auto it = f.listOfBlocks.begin(); it != f.listOfBlocks.end(); ++it) {
+		int n = *it;
+		for(int index; index < curFS.blocksize; index++){
+			buffer[n * curFS.blocksize + index] = curFS.ptr[n * curFS.blocksize + index];
+		}
+	}
+	
+	ofstream output_file(new_copy_file);
+    output_file.write(buffer, sizeof(buffer));
+    output_file.close();
+	
+	cout << " > [SUCCESSFUL] The file has been downloaded with success.'\n" << endl;
+
 }
 
 void createFunction(vector<string> param){
@@ -226,7 +372,7 @@ void createFunction(vector<string> param){
 	long long int b_size = stoi(param[2]);
 	long long int nOfBlocks = stoi(param[3]);
 	
-	if(b_size > MAX_BLOCKSIZE){
+	if(b_size > MAX_BLOCKSIZE || b_size % 128 != 0){
 		cout << " > [ERROR] Block size can't be over 1024! Default block sizes: 1024 512 256 128\n" << endl;
 		return;
 	}
@@ -271,6 +417,9 @@ void rmFunction(vector<string> param){
 	}
 	
 	string filename = param[1];
+	
+	cout << " > [SUCCESS] The file has been deleted with success.'\n" << endl;
+
 }
 
 void detailsFunction(vector<string> param){
@@ -285,6 +434,15 @@ void detailsFunction(vector<string> param){
 	}
 	
 	string filename = param[1];
+	FS_File f = curFS.file_list[filename];	
+	
+	cout << "Current File Information:" << endl;
+	cout << "\tFile Name: " << f.filename << endl;
+	cout << "\tNumber of Blocks Used: " << f.blocks_used << endl;
+	cout << "\tBlocks List: " << endl;
+	for (auto it = f.listOfBlocks.begin(); it != f.listOfBlocks.end(); ++it) 
+        cout << *it << " "; 
+	cout << endl;
 }
 
 void openFunction(vector<string> param){
@@ -293,7 +451,7 @@ void openFunction(vector<string> param){
 		return;
 	}
 	string name = param[1];
-	curFS.openFrom(curFS.name + ".dat");
+	curFS.openFrom(name + ".dat");
 	FS_OPEN = true;
 	cout << " > [SUCCESS] File system was loaded correctly into the system! \n" << endl;
 }
@@ -302,6 +460,10 @@ void lsFunction(){
 	if(!FS_OPEN){
 		cout << " > [ERROR] There's no active file system... \n" << endl;
 		return;
+	}
+	for(auto elem : curFS.file_list)
+	{
+	   cout << elem.second.filename << "\n";
 	}
 }
 
