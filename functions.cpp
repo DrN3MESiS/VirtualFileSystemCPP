@@ -41,8 +41,8 @@ class FS{
 		int blocksize = 128;
 		vector<FS_File> file_list;
 		char * ptr;
-		void save(ofstream& of); 
-    	void open(ifstream& inf); 
+		void saveTo(ofstream& of); 
+    	void openFrom(ifstream& inf); 
 	};
 	
 bool FS_OPEN = false;	
@@ -126,7 +126,7 @@ signed int cmdCheck(char str[]){
 	return index;
 }
 
-void FS::save(ofstream& of){ 
+void FS::saveTo(ofstream& of){ 
   of.write(&name, sizeof(name)); 
   of.write(&size, sizeof(size));
   of.write(&freeBlocks, sizeof(freeBlocks)); 
@@ -136,7 +136,7 @@ void FS::save(ofstream& of){
   of.write((char *)&ptr, sizeof(ptr));
 }
 
-void FS::open(ifstream& inf){ 
+void FS::openFrom(ifstream& inf){ 
   inf.read(&name, sizeof(name)); 
   inf.read(&size, sizeof(size));
   inf.read(&freeBlocks, sizeof(freeBlocks)); 
@@ -151,7 +151,7 @@ void saveFunction(){
 		ofstream outfile;
 		string filename = curFS.name + ".dat";
   		outfile.open(filename, ios::binary | ios::out);
-  		curFS.save(outfile);
+  		curFS.saveTo(outfile);
 	    outfile.close();
 	    
 	    FS_OPEN = false;
@@ -275,7 +275,7 @@ void openFunction(vector<string> param){
 		cout << " > [ERROR] There's an error trying to read that file...\n" << endl;
 		return;
 	}
-	curFS.open(inFile);
+	curFS.openFrom(inFile);
 	cout << " > [SUCCESS] File system was loaded correctly into the system! \n" << endl;
 }
 
