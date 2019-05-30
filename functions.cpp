@@ -183,7 +183,7 @@ void createFunction(vector<string> param){
 		return;
 	}
 	
-	FS_OPEN = true;
+	
 	FS newFS;
 	newFS.blocksize = b_size;
 	newFS.name = name;
@@ -200,6 +200,7 @@ void createFunction(vector<string> param){
 		newFS.ptr[i] = '0';
 	}
 	
+	FS_OPEN = true;
 	curFS = newFS;
 	
 	cout << " > [SUCCESS] A new file system was created -> " << curFS.name << endl;
