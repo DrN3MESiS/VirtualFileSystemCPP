@@ -126,6 +126,7 @@ void saveFunction(){
 		ofstream output_file(curFS.name + ".dat", ios::binary);
 	    output_file.write((char*)&curFS, sizeof(curFS));
 	    output_file.close();
+	    FS_OPEN = false;
 	} else {
 		cout << " > [WARNING] There isn't a file system opened. Please load on create a file system in order to save.'\n" << endl;
 	}
@@ -234,15 +235,10 @@ void openFunction(vector<string> param){
 	
 	string name = param[1];
 	
-	if(FS_OPEN){
-		
-		return;
-	} else {
 		ifstream input_file(name + ".dat", ios::binary);
     	FS master;
     	input_file.read((char*)&master, sizeof(master));
     	curFS = master;
-	}
 }
 
 void lsFunction(){
@@ -260,6 +256,7 @@ void infoFunction(){
 		cout << "\tFile System Block Size: " << curFS.blocksize << endl;
 		cout << "\tSpace Used (bytes): " << curFS.usedBlocks * curFS.blocksize << endl;
 		cout << "\tFree Space (bytes): " << (curFS.freeBlocks * curFS.blocksize) << endl;
+		cout << endl;
 	} else {
 		cout << " > [WARNING] There isn't a file system opened. Please load on create a file system in order to display it's information.\n" << endl;
 	}
