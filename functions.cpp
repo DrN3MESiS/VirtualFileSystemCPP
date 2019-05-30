@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include <cstring>
 
 #define save 431
 #define load 416
@@ -20,18 +21,20 @@
 #define MAX_SIZE 1073741824
 using namespace std;
 
-struct FS_Block{
-	int bid;
-	bool isFree = true;
-	string data;
+class FS_Block{
+	public:
+		int bid;
+		bool isFree = true;
 };
 
-struct FS_File{
-	string filename;
-	vector<FS_Block> listOfBlocks;
+class FS_File{
+	public:
+		string filename;
+		vector<FS_Block> listOfBlocks;
 };
 
-struct FS{
+class FS{
+	public:
 		string name;
 		long long int size;
 		long long int freeBlocks;
@@ -39,7 +42,8 @@ struct FS{
 		int blocksize = 128;
 		vector<FS_File> file_list;
 		char * ptr;
-		int n_files = 0;
+		void saveTo(const string& filename); 
+    	void openFrom(const string& filename); 
 	};
 	
 bool FS_OPEN = false;	
@@ -123,12 +127,61 @@ signed int cmdCheck(char str[]){
 	return index;
 }
 
+void FS::saveTo(const string& filename){
+	
+	ofstream of(filename, ios::binary);
+    
+    size_t value = name.size();
+    of.write(reinterpret_cast<char*>(&value), sizeof(value));
+    of.write(name.c_str(), value);
+
+    of.write(reinterpret_cast<char*>(&size), sizeof(size));
+    of.write(reinterpret_cast<char*>(&freeBlocks), sizeof(freeBlocks));
+    of.write(reinterpret_cast<char*>(&usedBlocks), sizeof(usedBlocks));
+    of.write(reinterpret_cast<char*>(&blocksize), sizeof(blocksize));
+
+    value = file_list.size();
+    of.write(reinterpret_cast<char*>(&value), sizeof(value));
+    for (size_t i = 0; i < value; ++i) {
+        // write file_list[i] to the stream as needed...
+    }
+
+    value = strlen(ptr);
+    of.write(reinterpret_cast<char*>(&value), sizeof(value));
+    of.write(ptr, value);
+}
+
+void FS::openFrom(const string& filename){
+	ifstream inf(filename, ios::binary);
+    size_t value;
+
+    inf.read(reinterpret_cast<char*>(&value), sizeof(value));
+    name.resize(value);
+    inf.read(&name[0], value);
+
+    inf.read(reinterpret_cast<char*>(&size), sizeof(size));
+    inf.read(reinterpret_cast<char*>(&freeBlocks), sizeof(freeBlocks));
+    inf.read(reinterpret_cast<char*>(&usedBlocks), sizeof(usedBlocks));
+    inf.read(reinterpret_cast<char*>(&blocksize), sizeof(blocksize));
+
+    inf.read(reinterpret_cast<char*>(&value), sizeof(value));
+    file_list.resize(value);
+    for (size_t i = 0; i < value; ++i) {
+        // read file_list[i] from stream as needed...
+    }
+
+    inf.read(reinterpret_cast<char*>(&value), sizeof(value));
+    free(ptr);
+    ptr = (char*) malloc(value+1);
+    inf.read(ptr, value);
+    ptr[value] = '\0';
+}
+
 void saveFunction(){
 	if(FS_OPEN){
-		ofstream output_file(curFS.name + ".dat", ios::binary);
-	    output_file.write((char*)&curFS, sizeof(curFS));
-	    output_file.close();
+  		curFS.saveTo(curFS.name + ".dat");    
 	    FS_OPEN = false;
+	    cout << " > [SUCCESS] File system was saved successfully.'\n" << endl;
 	} else {
 		cout << " > [WARNING] There isn't a file system opened. Please load on create a file system in order to save.'\n" << endl;
 	}
@@ -183,7 +236,7 @@ void createFunction(vector<string> param){
 		return;
 	}
 	
-	FS_OPEN = true;
+	
 	FS newFS;
 	newFS.blocksize = b_size;
 	newFS.name = name;
@@ -200,9 +253,10 @@ void createFunction(vector<string> param){
 		newFS.ptr[i] = '0';
 	}
 	
+	FS_OPEN = true;
 	curFS = newFS;
 	
-	cout << " > [SUCCESS] A new file system was created -> " << curFS.name << endl;
+	cout << " > [SUCCESS] A new file system was created -> " << curFS.name << "\n" << endl;
 }
 
 void rmFunction(vector<string> param){
@@ -238,13 +292,10 @@ void openFunction(vector<string> param){
 		cout << " > [ERROR] Not enough arguments in function OPEN... Usage: open <name>\n" << endl;
 		return;
 	}
-	
 	string name = param[1];
-	
-		ifstream input_file(name + ".dat", ios::binary);
-    	FS master;
-    	input_file.read((char*)&master, sizeof(master));
-    	curFS = master;
+	curFS.openFrom(curFS.name + ".dat");
+	FS_OPEN = true;
+	cout << " > [SUCCESS] File system was loaded correctly into the system! \n" << endl;
 }
 
 void lsFunction(){
