@@ -20,18 +20,20 @@
 #define MAX_SIZE 1073741824
 using namespace std;
 
-struct FS_Block{
-	int bid;
-	bool isFree = true;
-	string data;
+class FS_Block{
+	public:
+		int bid;
+		bool isFree = true;
 };
 
-struct FS_File{
-	string filename;
-	vector<FS_Block> listOfBlocks;
+class FS_File{
+	public:
+		string filename;
+		vector<FS_Block> listOfBlocks;
 };
 
-struct FS{
+class FS{
+	public:
 		string name;
 		long long int size;
 		long long int freeBlocks;
@@ -39,7 +41,8 @@ struct FS{
 		int blocksize = 128;
 		vector<FS_File> file_list;
 		char * ptr;
-		int n_files = 0;
+		void save(ofstream& of); 
+    	void open(ifstream& inf); 
 	};
 	
 bool FS_OPEN = false;	
@@ -123,12 +126,36 @@ signed int cmdCheck(char str[]){
 	return index;
 }
 
+void FS::save(ofstream& of){ 
+  of.write(&name, sizeof(name)); 
+  of.write(&size, sizeof(size));
+  of.write(&freeBlocks, sizeof(freeBlocks)); 
+  of.write(&usedBlocks, sizeof(usedBlocks)); 
+  of.write(&blocksize, sizeof(blocksize)); 
+  of.write(&file_list, sizeof(file_list));
+  of.write((char *)&ptr, sizeof(ptr));
+}
+
+void FS::open(ifstream& inf){ 
+  inf.read(&name, sizeof(name)); 
+  inf.read(&size, sizeof(size));
+  inf.read(&freeBlocks, sizeof(freeBlocks)); 
+  inf.read(&usedBlocks, sizeof(usedBlocks)); 
+  inf.read(&blocksize, sizeof(blocksize)); 
+  inf.read(&file_list, sizeof(file_list));
+  inf.read((char *)&ptr, sizeof(ptr));
+} 
+
 void saveFunction(){
 	if(FS_OPEN){
-		ofstream output_file(curFS.name + ".dat", ios::binary);
-	    output_file.write((char*)&curFS, sizeof(curFS));
-	    output_file.close();
+		ofstream outfile;
+		string filename = curFS.name + ".dat";
+  		outfile.open(filename, ios::binary | ios::out);
+  		curFS.save(outfile);
+	    outfile.close();
+	    
 	    FS_OPEN = false;
+	    cout << " > [SUCCESS] File system was saved successfully.'\n" << endl;
 	} else {
 		cout << " > [WARNING] There isn't a file system opened. Please load on create a file system in order to save.'\n" << endl;
 	}
@@ -203,7 +230,7 @@ void createFunction(vector<string> param){
 	FS_OPEN = true;
 	curFS = newFS;
 	
-	cout << " > [SUCCESS] A new file system was created -> " << curFS.name << endl;
+	cout << " > [SUCCESS] A new file system was created -> " << curFS.name << "\n" << endl;
 }
 
 void rmFunction(vector<string> param){
@@ -239,13 +266,17 @@ void openFunction(vector<string> param){
 		cout << " > [ERROR] Not enough arguments in function OPEN... Usage: open <name>\n" << endl;
 		return;
 	}
-	
 	string name = param[1];
 	
-		ifstream input_file(name + ".dat", ios::binary);
-    	FS master;
-    	input_file.read((char*)&master, sizeof(master));
-    	curFS = master;
+	ifstream inFile;
+	inFile.open(name + ".dat", ios::binary|ios::in);
+	
+	if(inFile.fail()){
+		cout << " > [ERROR] There's an error trying to read that file...\n" << endl;
+		return;
+	}
+	curFS.open(inFile);
+	cout << " > [SUCCESS] File system was loaded correctly into the system! \n" << endl;
 }
 
 void lsFunction(){
