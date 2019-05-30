@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include <cstring>
 
 #define save 431
 #define load 416
@@ -41,8 +42,8 @@ class FS{
 		int blocksize = 128;
 		vector<FS_File> file_list;
 		char * ptr;
-		void saveTo(ofstream& of); 
-    	void openFrom(ifstream& inf); 
+		void saveTo(const string& filename); 
+    	void openFrom(const string& filename); 
 	};
 	
 bool FS_OPEN = false;	
@@ -126,34 +127,59 @@ signed int cmdCheck(char str[]){
 	return index;
 }
 
-void FS::saveTo(ofstream& of){ 
-  of.write(&name, sizeof(name)); 
-  of.write(&size, sizeof(size));
-  of.write(&freeBlocks, sizeof(freeBlocks)); 
-  of.write(&usedBlocks, sizeof(usedBlocks)); 
-  of.write(&blocksize, sizeof(blocksize)); 
-  of.write(&file_list, sizeof(file_list));
-  of.write((char *)&ptr, sizeof(ptr));
+void FS::saveTo(const string& filename){
+	
+	ofstream of(filename, ios::binary);
+    
+    size_t value = name.size();
+    of.write(reinterpret_cast<char*>(&value), sizeof(value));
+    of.write(name.c_str(), value);
+
+    of.write(reinterpret_cast<char*>(&size), sizeof(size));
+    of.write(reinterpret_cast<char*>(&freeBlocks), sizeof(freeBlocks));
+    of.write(reinterpret_cast<char*>(&usedBlocks), sizeof(usedBlocks));
+    of.write(reinterpret_cast<char*>(&blocksize), sizeof(blocksize));
+
+    value = file_list.size();
+    of.write(reinterpret_cast<char*>(&value), sizeof(value));
+    for (size_t i = 0; i < value; ++i) {
+        // write file_list[i] to the stream as needed...
+    }
+
+    value = strlen(ptr);
+    of.write(reinterpret_cast<char*>(&value), sizeof(value));
+    of.write(ptr, value);
 }
 
-void FS::openFrom(ifstream& inf){ 
-  inf.read(&name, sizeof(name)); 
-  inf.read(&size, sizeof(size));
-  inf.read(&freeBlocks, sizeof(freeBlocks)); 
-  inf.read(&usedBlocks, sizeof(usedBlocks)); 
-  inf.read(&blocksize, sizeof(blocksize)); 
-  inf.read(&file_list, sizeof(file_list));
-  inf.read((char *)&ptr, sizeof(ptr));
-} 
+void FS::openFrom(const string& filename){
+	ifstream inf(filename, ios::binary);
+    size_t value;
+
+    inf.read(reinterpret_cast<char*>(&value), sizeof(value));
+    name.resize(value);
+    inf.read(&name[0], value);
+
+    inf.read(reinterpret_cast<char*>(&size), sizeof(size));
+    inf.read(reinterpret_cast<char*>(&freeBlocks), sizeof(freeBlocks));
+    inf.read(reinterpret_cast<char*>(&usedBlocks), sizeof(usedBlocks));
+    inf.read(reinterpret_cast<char*>(&blocksize), sizeof(blocksize));
+
+    inf.read(reinterpret_cast<char*>(&value), sizeof(value));
+    file_list.resize(value);
+    for (size_t i = 0; i < value; ++i) {
+        // read file_list[i] from stream as needed...
+    }
+
+    inf.read(reinterpret_cast<char*>(&value), sizeof(value));
+    free(ptr);
+    ptr = (char*) malloc(value+1);
+    inf.read(ptr, value);
+    ptr[value] = '\0';
+}
 
 void saveFunction(){
 	if(FS_OPEN){
-		ofstream outfile;
-		string filename = curFS.name + ".dat";
-  		outfile.open(filename, ios::binary | ios::out);
-  		curFS.saveTo(outfile);
-	    outfile.close();
-	    
+  		curFS.saveTo(curFS.name + ".dat");    
 	    FS_OPEN = false;
 	    cout << " > [SUCCESS] File system was saved successfully.'\n" << endl;
 	} else {
@@ -267,15 +293,8 @@ void openFunction(vector<string> param){
 		return;
 	}
 	string name = param[1];
-	
-	ifstream inFile;
-	inFile.open(name + ".dat", ios::binary|ios::in);
-	
-	if(inFile.fail()){
-		cout << " > [ERROR] There's an error trying to read that file...\n" << endl;
-		return;
-	}
-	curFS.openFrom(inFile);
+	curFS.openFrom(curFS.name + ".dat");
+	FS_OPEN = true;
 	cout << " > [SUCCESS] File system was loaded correctly into the system! \n" << endl;
 }
 
