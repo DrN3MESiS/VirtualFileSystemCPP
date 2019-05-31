@@ -7,17 +7,17 @@
 #include <fstream>
 #include <cstdlib>
 #include <map>
-#define save 431
-#define load 416
-#define download 856
-#define create 628
-#define rm 648
-#define details 742
-#define open 434
-#define ls 223
-#define info 428
-#define clear 519
-#define exit 442
+#define save 636
+#define load 605
+#define download 2948
+#define create 1576
+#define rm 109
+#define details 2274
+#define open 644
+#define ls 115
+#define info 647
+#define clear 1057
+#define exit 678
 #define MAX_BLOCKSIZE 1024
 #define MAX_SIZE 1073741824
 #define version "\nVirtual File System [Version 0.1b]\nCreated by AEMN & GGM\n"
@@ -142,7 +142,7 @@ int toInt(char str[]){
 	int value = 0;
 	for(int i = 0; i < sizeof(str); i++){
 		char t = str[i];
-		value += (int)t;
+		value += (int)t * i;
 	}
 	return value;
 }
@@ -151,47 +151,38 @@ signed int cmdCheck(char str[]){
 	int index = toInt(str);
 	switch(index){
 		case save:
-//			cout << "Called SAVE\n" << endl;
 			index  = 0;
 			break;
 		
 		case load:
-//			cout << "Called LOAD\n" << endl;
 			index = 1;
 			break;
 			
 		case download:
-//			cout << "Called DOWNLOAD\n" << endl;
 			index  = 2;
 			break;
 
 		case create:
-//			cout << "Called CREATE\n" << endl;
 			index = 3;
 			break;
 			
 		case rm:
-//			cout << "Called RM\n" << endl;
 			index = 4;
 			break;
 			
 		case details:
-//			cout << "Called DETAILS\n" << endl;
 			index = 5;
 			break;
 			
 		case open:
-//			cout << "Called OPEN\n" << endl;
 			index = 6;
 			break;
 			
 		case ls:
-			cout << "Called LS\n" << endl;
 			index = 7;
 			break;
 			
 		case info:
-//			cout << "Called INFO\n" << endl;
 			index = 8;
 			break;
 			
@@ -276,13 +267,10 @@ void saveFunction(){
 	}
 }
 
+//Falta los bloques
 void loadFunction(vector<string> param){
 	if(param.size() < 3){
 		cout << " > [ERROR] Not enough arguments in function LOAD... Usage: load <original_file.ext> <copy_file.ext> \n" << endl;
-		return;
-	}
-	if(!FS_OPEN){
-		cout << " > [ERROR] There's no active file system... \n" << endl;
 		return;
 	}
 	
@@ -297,7 +285,7 @@ void loadFunction(vector<string> param){
 	
 	FS_File f;
 	f.filename = copy_filename;
-	f.blocks_used = ceil(length / curFS.blocksize);
+	f.blocks_used = ceil((float)length / (float)curFS.blocksize);
 	
 	// don't overflow the buffer!
 	if (length > (curFS.size - curFS.usedBlocks))
@@ -314,29 +302,26 @@ void loadFunction(vector<string> param){
 	
 	for(int i=1; i<length+1; i++){
 		block[(i-1) - (j*curFS.blocksize)] = buffer[i-1];
-		if(i % curFS.blocksize == 0){
+		if(i % curFS.blocksize == 0 || i == length){
 			f.listOfBlocks.insert(f.listOfBlocks.end(),j);
-			for(int index; index < sizeof(block); index++){
+			for(int index=0; index < sizeof(block); index++){
 				curFS.ptr[j*curFS.blocksize + index] = block[index];
 			}
 			j++;
+			for(int index=0; index < sizeof(block); index++){
+				block[index] = '\0';
+			}
 		}
 	}
 	curFS.file_list.insert(pair<string,FS_File>(f.filename,f));
-	curFS.usedBlocks = length;
+	curFS.usedBlocks += f.blocks_used;
 
 	cout << " > [SUCCESSFUL] The file has been loaded with success.'\n" << endl;
-
 }
 
 void downloadFunction(vector<string> param){
 	if(param.size() < 3){
 		cout << " > [ERROR] Not enough arguments in function DOWNLOAD... Usage: download <copy_file.ext> <new_copy_file.ext>\n" << endl;
-		return;
-	}
-	
-	if(!FS_OPEN){
-		cout << " > [ERROR] There's no active file system... \n" << endl;
 		return;
 	}
 	
@@ -349,7 +334,7 @@ void downloadFunction(vector<string> param){
 	
 	for (auto it = f.listOfBlocks.begin(); it != f.listOfBlocks.end(); ++it) {
 		int n = *it;
-		for(int index; index < curFS.blocksize; index++){
+		for(int index=0; index < curFS.blocksize; index++){
 			buffer[n * curFS.blocksize + index] = curFS.ptr[n * curFS.blocksize + index];
 		}
 	}
@@ -359,7 +344,6 @@ void downloadFunction(vector<string> param){
     output_file.close();
 	
 	cout << " > [SUCCESSFUL] The file has been downloaded with success.'\n" << endl;
-
 }
 
 void createFunction(vector<string> param){
@@ -417,9 +401,15 @@ void rmFunction(vector<string> param){
 	}
 	
 	string filename = param[1];
+	FS_File f = curFS.file_list[filename];	
 	
-	cout << " > [SUCCESS] The file has been deleted with success.'\n" << endl;
-
+	if(f.blocks_used > 0){
+		curFS.usedBlocks -= f.blocks_used;
+		curFS.file_list.erase(filename);
+		cout << " > [SUCCESSFUL] The file has been deleted with success.'\n" << endl;
+	}else{
+		cout << " > [ERROR] File not found... \n" << endl;
+	}
 }
 
 void detailsFunction(vector<string> param){
@@ -436,13 +426,17 @@ void detailsFunction(vector<string> param){
 	string filename = param[1];
 	FS_File f = curFS.file_list[filename];	
 	
-	cout << "Current File Information:" << endl;
-	cout << "\tFile Name: " << f.filename << endl;
-	cout << "\tNumber of Blocks Used: " << f.blocks_used << endl;
-	cout << "\tBlocks List: " << endl;
-	for (auto it = f.listOfBlocks.begin(); it != f.listOfBlocks.end(); ++it) 
-        cout << *it << " "; 
-	cout << endl;
+	if(f.blocks_used > 0){
+		cout << "Current File Information:" << endl;
+		cout << "\tFile Name: " << f.filename << endl;
+		cout << "\tNumber of Blocks Used: " << f.blocks_used << endl;
+		cout << "\tBlocks List: " << endl;
+		for (auto it = f.listOfBlocks.begin(); it != f.listOfBlocks.end(); ++it) 
+	        cout << *it << " "; 
+		cout << endl;
+	}else{
+		cout << " > [ERROR] File not found... \n" << endl;
+	}
 }
 
 void openFunction(vector<string> param){
