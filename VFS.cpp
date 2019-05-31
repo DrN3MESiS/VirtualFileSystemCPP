@@ -225,7 +225,7 @@ void FS::saveTo(const string& filename){
     value = file_list.size();
     of.write(reinterpret_cast<char*>(&value), sizeof(value));
     
-	// write file_list[i] to the stream as needed...
+	// write file_list[i] to the stream...
 	for (auto it = file_list.begin(); it != file_list.end(); ++it) {
 		/*string name = it->first;
 		size_t tvalue = name.size();
@@ -270,7 +270,7 @@ void FS::openFrom(const string& filename){
     inf.read(reinterpret_cast<char*>(&usedBlocks), sizeof(usedBlocks));
     inf.read(reinterpret_cast<char*>(&blocksize), sizeof(blocksize));
 
-	// read file_list[i] from stream as needed...
+	// read file_list[i] from stream...
 	value = file_list.size();
     inf.read(reinterpret_cast<char*>(&value), sizeof(value));
     
