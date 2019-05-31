@@ -10,4 +10,16 @@ University: Universidad Panamericana Guadalajara
 Virtual File System written in C++
 
 # Features:
-1 - None.
+- CREATE
+- SAVE
+- DOWNLOAD
+- OPEN
+- LOAD
+- LS
+- RM
+- DETAILS
+- INFO
+
+
+# References
+http://www.eecs.umich.edu/courses/eecs380/HANDOUTS/cppBinaryFileIO-2.html
