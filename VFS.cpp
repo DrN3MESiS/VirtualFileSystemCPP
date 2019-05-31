@@ -227,7 +227,7 @@ void FS::saveTo(const string& filename){
     
 	// write file_list[i] to the stream as needed...
 	for (auto it = file_list.begin(); it != file_list.end(); ++it) {
-		string name = it->first;
+		/*string name = it->first;
 		size_t tvalue = name.size();
     	of.write(reinterpret_cast<char*>(&tvalue), sizeof(tvalue));
     	of.write(name.c_str(), tvalue);
@@ -241,18 +241,16 @@ void FS::saveTo(const string& filename){
     	tvalue = temp.listOfBlocks.size();
     	for(size_t t = 0; t < tvalue; t++){
     		of.write(reinterpret_cast<char*>(&temp.listOfBlocks[t]), sizeof(temp.listOfBlocks[t]));
-		}
+		}*/
 		
 	}
 	
-	/*** BLOCK WRITING
 	value = usedB.size();
 	of.write(reinterpret_cast<char*>(&value), sizeof(value));
 	for(size_t x = 0; x < value; x++){
-		value = usedB[x];
 		of.write(reinterpret_cast<char*>(&usedB[x]), sizeof(usedB[x]));
 	}
-	***/
+	
 	
     value = strlen(ptr);
     of.write(reinterpret_cast<char*>(&value), sizeof(value));
@@ -277,23 +275,29 @@ void FS::openFrom(const string& filename){
     inf.read(reinterpret_cast<char*>(&value), sizeof(value));
     
     for (auto const& x : file_list){
+    	/*size_t tvalue;
     	//File Props reading
-		string name = x.first;
-		size_t tvalue = name.size();
     	inf.read(reinterpret_cast<char*>(&tvalue), sizeof(tvalue));
-    	inf.read(&name.c_str(), tvalue);
+		x.first.resize(tvalue);
+    	inf.read(&x.first, value);
     	
     	//File class writting
-		FS_File temp = x.second;
-		inf.read(reinterpret_cast<char*>(&temp.blocks_used), sizeof(temp.blocks_used));
+		inf.read(reinterpret_cast<char*>(&x.blocks_used), sizeof(x.blocks_used));
+		
 		tvalue = temp.filename.size();
 		inf.read(reinterpret_cast<char*>(&tvalue), sizeof(tvalue));
-    	inf.read(&temp.filename.c_str(), tvalue);
+    	inf.read(temp.filename.c_str(), tvalue);
     	
     	tvalue = temp.listOfBlocks.size();
     	for(size_t t = 0; t < tvalue; t++){
     		inf.read(reinterpret_cast<char*>(&temp.listOfBlocks[t]), sizeof(temp.listOfBlocks[t]));
-		}
+		}*/
+	}
+	
+	value = usedB.size();
+	inf.read(reinterpret_cast<char*>(&value), sizeof(value));
+	for(size_t x = 0; x < value; x++){
+		inf.read(reinterpret_cast<char*>(&usedB[x]), sizeof(usedB[x]));
 	}
 
 
