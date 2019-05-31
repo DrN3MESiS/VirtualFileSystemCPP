@@ -222,10 +222,13 @@ void FS::saveTo(const string& filename){
 
     value = file_list.size();
     of.write(reinterpret_cast<char*>(&value), sizeof(value));
-    for (size_t i = 0; i < value; ++i) {
-        // write file_list[i] to the stream as needed...
-    }
-
+	// write file_list[i] to the stream as needed...
+	for (auto it = f.listOfBlocks.begin(); it != f.listOfBlocks.end(); ++it) {
+		int n = *it;
+		for(int index=0; index < curFS.blocksize; index++){
+			buffer[n * curFS.blocksize + index] = curFS.ptr[n * curFS.blocksize + index];
+		}
+	}
     value = strlen(ptr);
     of.write(reinterpret_cast<char*>(&value), sizeof(value));
     of.write(ptr, value);
@@ -267,7 +270,6 @@ void saveFunction(){
 	}
 }
 
-//Falta los bloques
 void loadFunction(vector<string> param){
 	if(param.size() < 3){
 		cout << " > [ERROR] Not enough arguments in function LOAD... Usage: load <original_file.ext> <copy_file.ext> \n" << endl;
@@ -287,7 +289,6 @@ void loadFunction(vector<string> param){
 	f.filename = copy_filename;
 	f.blocks_used = ceil((float)length / (float)curFS.blocksize);
 	
-	// don't overflow the buffer!
 	if (length > (curFS.size - curFS.usedBlocks))
 	{
 	    cout << " > [ERROR] Not enough memory space for the file... Required a minimum memory of " << length << "\n" << endl;
