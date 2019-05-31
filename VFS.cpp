@@ -6,6 +6,7 @@
 #include <vector>
 #include <fstream>
 #include <cstdlib>
+#include <time.h>
 #include <map>
 #define save 636
 #define load 605
@@ -53,10 +54,11 @@ class FS{
 	public:
 		string name;
 		long long int size;
-		long long int freeBlocks;
+		long long int totalBlocks;
 		long long int usedBlocks = 0;
 		int blocksize = 128;
 		map<string,FS_File> file_list;
+		vector<FS_Block> usedB;
 		char * ptr;
 		void saveTo(const string& filename); 
     	void openFrom(const string& filename); 
@@ -216,17 +218,42 @@ void FS::saveTo(const string& filename){
     of.write(name.c_str(), value);
 
     of.write(reinterpret_cast<char*>(&size), sizeof(size));
-    of.write(reinterpret_cast<char*>(&freeBlocks), sizeof(freeBlocks));
+    of.write(reinterpret_cast<char*>(&totalBlocks), sizeof(totalBlocks));
     of.write(reinterpret_cast<char*>(&usedBlocks), sizeof(usedBlocks));
     of.write(reinterpret_cast<char*>(&blocksize), sizeof(blocksize));
 
     value = file_list.size();
     of.write(reinterpret_cast<char*>(&value), sizeof(value));
+    
 	// write file_list[i] to the stream as needed...
-	for (auto it = f.file_list.begin(); it != f.file_list.end(); ++it) {
-		int n = *it;
-		fil
+	for (auto it = file_list.begin(); it != file_list.end(); ++it) {
+		string name = it->first;
+		size_t tvalue = name.size();
+    	of.write(reinterpret_cast<char*>(&tvalue), sizeof(tvalue));
+    	of.write(name.c_str(), tvalue);
+
+		FS_File temp = it->second;
+		of.write(reinterpret_cast<char*>(&temp.blocks_used), sizeof(temp.blocks_used));
+		tvalue = temp.filename.size();
+		of.write(reinterpret_cast<char*>(&tvalue), sizeof(tvalue));
+    	of.write(temp.filename.c_str(), tvalue);
+
+    	tvalue = temp.listOfBlocks.size();
+    	for(size_t t = 0; t < tvalue; t++){
+    		of.write(reinterpret_cast<char*>(&temp.listOfBlocks[t]), sizeof(temp.listOfBlocks[t]));
+		}
+		
 	}
+	
+	/*** BLOCK WRITING
+	value = usedB.size();
+	of.write(reinterpret_cast<char*>(&value), sizeof(value));
+	for(size_t x = 0; x < value; x++){
+		value = usedB[x];
+		of.write(reinterpret_cast<char*>(&usedB[x]), sizeof(usedB[x]));
+	}
+	***/
+	
     value = strlen(ptr);
     of.write(reinterpret_cast<char*>(&value), sizeof(value));
     of.write(ptr, value);
@@ -241,15 +268,34 @@ void FS::openFrom(const string& filename){
     inf.read(&name[0], value);
 
     inf.read(reinterpret_cast<char*>(&size), sizeof(size));
-    inf.read(reinterpret_cast<char*>(&freeBlocks), sizeof(freeBlocks));
+    inf.read(reinterpret_cast<char*>(&totalBlocks), sizeof(totalBlocks));
     inf.read(reinterpret_cast<char*>(&usedBlocks), sizeof(usedBlocks));
     inf.read(reinterpret_cast<char*>(&blocksize), sizeof(blocksize));
 
+	// read file_list[i] from stream as needed...
+	value = file_list.size();
     inf.read(reinterpret_cast<char*>(&value), sizeof(value));
-    value = filename.size();
-    for (size_t i = 0; i < value; ++i) {
-        // read file_list[i] from stream as needed...
-    }
+    
+    for (auto const& x : file_list){
+    	//File Props reading
+		string name = x.first;
+		size_t tvalue = name.size();
+    	inf.read(reinterpret_cast<char*>(&tvalue), sizeof(tvalue));
+    	inf.read(&name.c_str(), tvalue);
+    	
+    	//File class writting
+		FS_File temp = x.second;
+		inf.read(reinterpret_cast<char*>(&temp.blocks_used), sizeof(temp.blocks_used));
+		tvalue = temp.filename.size();
+		inf.read(reinterpret_cast<char*>(&tvalue), sizeof(tvalue));
+    	inf.read(&temp.filename.c_str(), tvalue);
+    	
+    	tvalue = temp.listOfBlocks.size();
+    	for(size_t t = 0; t < tvalue; t++){
+    		inf.read(reinterpret_cast<char*>(&temp.listOfBlocks[t]), sizeof(temp.listOfBlocks[t]));
+		}
+	}
+
 
     inf.read(reinterpret_cast<char*>(&value), sizeof(value));
     free(ptr);
@@ -287,6 +333,7 @@ void loadFunction(vector<string> param){
 	f.filename = copy_filename;
 	f.blocks_used = ceil((float)length / (float)curFS.blocksize);
 	
+	// don't overflow the buffer!
 	if (length > (curFS.size - curFS.usedBlocks))
 	{
 	    cout << " > [ERROR] Not enough memory space for the file... Required a minimum memory of " << length << "\n" << endl;
@@ -297,21 +344,24 @@ void loadFunction(vector<string> param){
 	input_file.close();
 	
 	char block[curFS.blocksize];
-	int j = 0;
+	srand(time(NULL));
+	int j;
+	int b = 0;
 	
 	for(int i=1; i<length+1; i++){
-		block[(i-1) - (j*curFS.blocksize)] = buffer[i-1];
+		block[(i-1) - (b*curFS.blocksize)] = buffer[i-1];
 		if(i % curFS.blocksize == 0 || i == length){
+			b++;
+			do{
+				j = rand() % curFS.totalBlocks;
+			}while(!curFS.usedB[j].isFree);
+			curFS.usedB[j].isFree = false;
 			f.listOfBlocks.insert(f.listOfBlocks.end(),j);
 			for(int index=0; index < sizeof(block); index++){
 				if(index > length){
 					block[index] = '\0';
 				}
 				curFS.ptr[j*curFS.blocksize + index] = block[index];
-			}
-			j++;
-			for(int index=0; index < sizeof(block); index++){
-				block[index] = '\0';
 			}
 		}
 	}
@@ -333,12 +383,15 @@ void downloadFunction(vector<string> param){
 	FS_File f = curFS.file_list[copy_file];
 	
 	char buffer[curFS.blocksize * f.blocks_used];
+	int j = 0;
 	
 	for (auto it = f.listOfBlocks.begin(); it != f.listOfBlocks.end(); ++it) {
 		int n = *it;
+		
 		for(int index=0; index < curFS.blocksize; index++){
-			buffer[n * curFS.blocksize + index] = curFS.ptr[n * curFS.blocksize + index];
+			buffer[j * curFS.blocksize + index] = curFS.ptr[n * curFS.blocksize + index];
 		}
+		j++;
 	}
 	
 	ofstream output_file(new_copy_file);
@@ -373,7 +426,7 @@ void createFunction(vector<string> param){
 	newFS.blocksize = b_size;
 	newFS.name = name;
 	newFS.size = (b_size * nOfBlocks);
-	newFS.freeBlocks = nOfBlocks;
+	newFS.totalBlocks = nOfBlocks;
 	newFS.ptr = (char*) malloc((b_size * nOfBlocks));
 	
 	if(newFS.ptr == NULL){
@@ -470,7 +523,7 @@ void infoFunction(){
 		cout << "\tFile System Size (bytes): " << curFS.size << endl;
 		cout << "\tFile System Block Size: " << curFS.blocksize << endl;
 		cout << "\tSpace Used (bytes): " << curFS.usedBlocks * curFS.blocksize << endl;
-		cout << "\tFree Space (bytes): " << (curFS.freeBlocks * curFS.blocksize) << endl;
+		cout << "\tFree Space (bytes): " << (curFS.totalBlocks * curFS.blocksize) << endl;
 		cout << endl;
 	} else {
 		cout << " > [WARNING] There isn't a file system opened. Please load on create a file system in order to display it's information.\n" << endl;
