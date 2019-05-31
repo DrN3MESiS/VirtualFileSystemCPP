@@ -223,11 +223,9 @@ void FS::saveTo(const string& filename){
     value = file_list.size();
     of.write(reinterpret_cast<char*>(&value), sizeof(value));
 	// write file_list[i] to the stream as needed...
-	for (auto it = f.listOfBlocks.begin(); it != f.listOfBlocks.end(); ++it) {
+	for (auto it = f.file_list.begin(); it != f.file_list.end(); ++it) {
 		int n = *it;
-		for(int index=0; index < curFS.blocksize; index++){
-			buffer[n * curFS.blocksize + index] = curFS.ptr[n * curFS.blocksize + index];
-		}
+		fil
 	}
     value = strlen(ptr);
     of.write(reinterpret_cast<char*>(&value), sizeof(value));
@@ -312,9 +310,6 @@ void loadFunction(vector<string> param){
 				curFS.ptr[j*curFS.blocksize + index] = block[index];
 			}
 			j++;
-			for(int index=0; index < sizeof(block); index++){
-				block[index] = '\0';
-			}
 		}
 	}
 	curFS.file_list.insert(pair<string,FS_File>(f.filename,f));
