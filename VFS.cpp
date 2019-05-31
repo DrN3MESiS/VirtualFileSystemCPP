@@ -306,6 +306,9 @@ void loadFunction(vector<string> param){
 		if(i % curFS.blocksize == 0 || i == length){
 			f.listOfBlocks.insert(f.listOfBlocks.end(),j);
 			for(int index=0; index < sizeof(block); index++){
+				if(index > length){
+					block[index] = '\0';
+				}
 				curFS.ptr[j*curFS.blocksize + index] = block[index];
 			}
 			j++;
