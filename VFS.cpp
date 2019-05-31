@@ -310,6 +310,9 @@ void loadFunction(vector<string> param){
 				curFS.ptr[j*curFS.blocksize + index] = block[index];
 			}
 			j++;
+			for(int index=0; index < sizeof(block); index++){
+				block[index] = '\0';
+			}
 		}
 	}
 	curFS.file_list.insert(pair<string,FS_File>(f.filename,f));
