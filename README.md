@@ -1,13 +1,20 @@
-# [C++] Virtual File System
+# Virtual File System Recreation
 
-Author: Alan Enrique Maldonado Navarro & Guillermo Gonzales Mena
+### Details
+* Language
+  * C++
+* Project Relation
+  * University Project for *Operative Systems* Class
+* External Dependencies
+  * http://www.eecs.umich.edu/courses/eecs380/HANDOUTS/cppBinaryFileIO-2.html
 
-Class: Operative Systems
+### Devoper(s)
+* [Alan Enrique Maldonado Navarro](https://github.com/DrN3MESiS/)
+* Guillermo Gonzalez Mena
 
-University: Universidad Panamericana Guadalajara
-
-# Description:
-Virtual File System written in C++
+#### What did I learned from this project?
+* Learned to manage raw memory
+* Learned to save, load, create, read, and delete information into/from memory.
 
 # Features:
 - CREATE
@@ -19,7 +26,6 @@ Virtual File System written in C++
 - RM
 - DETAILS
 - INFO
-
 
 # References
 http://www.eecs.umich.edu/courses/eecs380/HANDOUTS/cppBinaryFileIO-2.html
